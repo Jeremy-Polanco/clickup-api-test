@@ -9,6 +9,8 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
 const clickUp_router_js_1 = __importDefault(require("./routes/clickUp.router.js"));
+const auth_router_js_1 = __importDefault(require("./routes/auth.router.js"));
+const report_router_js_1 = __importDefault(require("./routes/report.router.js"));
 const notFoundMiddleware_js_1 = __importDefault(require("./middleware/notFoundMiddleware.js"));
 const errorHandlerMiddleware_js_1 = __importDefault(require("./middleware/errorHandlerMiddleware.js"));
 dotenv_1.default.config();
@@ -17,6 +19,8 @@ app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 app.use((0, morgan_1.default)('dev'));
 app.use('/api/v1/click-up', clickUp_router_js_1.default);
+app.use('/api/v1/auth', auth_router_js_1.default);
+app.use('/api/v1/report', report_router_js_1.default);
 const port = process.env.PORT || 5000;
 app.get('/', (req, res) => {
     res.send('API development');

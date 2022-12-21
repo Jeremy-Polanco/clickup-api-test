@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import clickUpRouter from './routes/clickUp.router.js';
+import authRouter from './routes/auth.router.js';
+import reportRouter from './routes/report.router.js';
 import notFoundMiddleware from './middleware/notFoundMiddleware.js';
 import errorHandlerMiddleware from './middleware/errorHandlerMiddleware.js';
 
@@ -15,6 +17,8 @@ app.use(cors());
 app.use(morgan('dev'));
 
 app.use('/api/v1/click-up', clickUpRouter);
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/report', reportRouter);
 
 const port = process.env.PORT || 5000;
 
