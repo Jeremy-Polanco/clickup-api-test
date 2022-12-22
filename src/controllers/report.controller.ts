@@ -1,6 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
 import { Request, Response } from 'express';
-import updateExcelPosition from '../utils/updateExcelPosition.js';
 import { CLICK_UP_BASE_URL_API, CLICK_UP_CONTENT_TYPE } from '../constants.js';
 import CustomError from '../errors/index.js';
 import axios from 'axios';
@@ -9,12 +8,6 @@ import { PLATAFORMS } from '../constants.js';
 const editReport = async (req: Request, res: Response) => {
   const clickUpPersonalToken: string =
     'pk_54034017_NSFPIW7VLMTT9P90BM2VU9PH89XEFUDH';
-
-  const { filePath, position } = req.body;
-
-  if (!filePath || !position) {
-    throw new CustomError.BadRequest('Por favor envia informacion valida');
-  }
 
   const {
     data: { teams },
@@ -72,9 +65,29 @@ const editReport = async (req: Request, res: Response) => {
     })
   );
 
-  const helpDeskLists = lists.map((list: { lists: any }) => {
-    return list.lists;
-  });
+  const helpDeskLists = lists
+    .map((list: { lists: any }) => {
+      return list.lists;
+    })
+    .flat(Infinity);
+
+  const incidenciasInfraestructura = helpDeskLists.filter(
+    (list: { name: string; folder: { name: string } }) => {
+      return (
+        list.folder.name.includes('Infraestructura') &&
+        list.name.toLowerCase().includes('incidencias')
+      );
+    }
+  )[0].task_count;
+
+  const incidenciasComunicaciones = helpDeskLists.filter(
+    (list: { name: string; folder: { name: string } }) => {
+      return (
+        list.folder.name.includes('Comunicaciones') &&
+        list.name.toLowerCase().includes('incidencias')
+      );
+    }
+  )[0].task_count;
 
   const incidencias = helpDeskLists
     .flat(Infinity)
@@ -111,29 +124,35 @@ const editReport = async (req: Request, res: Response) => {
     .flat(Infinity);
 
   const incidenciasCount = incidenciasTasks.reduce((count, incidencias) => {
-    const incidenciaPlatform = incidencias.custom_fields.filter(
-      (custom_field: any) => custom_field.name === 'PLATAFORMA/APP'
-    )[0];
+    const incidenciaPlatform =
+      incidencias.custom_fields
+        .map((custom_field: any) => {
+          if (custom_field.name !== 'PLATAFORMA/APP') {
+            return;
+          }
+          return custom_field;
+        })
+        .filter((incidencia: any) => incidencia && incidencia !== undefined)[0]
+        .value || [];
 
-    console.log(
-      Object.values(incidenciaPlatform).includes(
-        incidencias.custom_fields.filter(incidenciaPlatform).value
-      )
+    const key: unknown = Object.keys(PLATAFORMS).find((key: string) =>
+      incidenciaPlatform.includes(PLATAFORMS[key])
     );
 
-    // if (
-    //   count[
-    //     incidencias.custom_fields.filter(
-    //       (custom_field: any) => custom_field.name === 'PLATAFORMA/APP'
-    //     )
-    //   ]
-    // ) {
-    // }
+    if (!count[key as string]) {
+      count[key as string] = 1;
+    } else {
+      count[key as string] = count[key as string] + 1;
+    }
+
+    return count;
+  }, {});
+
+  res.status(StatusCodes.OK).json({
+    ...incidenciasCount,
+    comunicacion: incidenciasComunicaciones,
+    infraestructura: incidenciasInfraestructura,
   });
-
-  /*  updateExcelPosition(filePath, position); */
-
-  res.status(StatusCodes.OK).json({ message: 'Edit report' });
 };
 
 export { editReport };

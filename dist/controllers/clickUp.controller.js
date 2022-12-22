@@ -42,8 +42,7 @@ const getSpaces = async (req, res) => {
                     Authorization: accessToken,
                 },
             });
-            const { id: spaceId, name: spaceName } = data.spaces[0];
-            return { spaceId, spaceName };
+            return data;
         }
         catch (error) {
             console.log(error);
@@ -55,7 +54,7 @@ exports.getSpaces = getSpaces;
 const getFolders = async (req, res) => {
     const { spaces } = req.body;
     const accessToken = req.get('Authorization');
-    const spacesId = spaces.map((space) => space?.spaceId);
+    const spacesId = spaces.map((space) => space?.id);
     let folders = [];
     folders = await Promise.all(spacesId.map(async (spaceId) => {
         try {
@@ -70,13 +69,15 @@ const getFolders = async (req, res) => {
             console.log(error);
         }
     }));
-    res.status(http_status_codes_1.StatusCodes.OK).json(folders);
+    const filteredFolders = folders.filter((folder) => folder.folders.length > 0);
+    res.status(http_status_codes_1.StatusCodes.OK).json(filteredFolders);
 };
 exports.getFolders = getFolders;
 const getLists = async (req, res) => {
     const { folders } = req.body;
     const accessToken = req.get('Authorization');
     const foldersId = folders.map((folder) => folder.id);
+    console.log(folders);
     console.log(foldersId);
     let lists = [];
     lists = await Promise.all(foldersId.map(async (folderId) => {

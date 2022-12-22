@@ -55,8 +55,7 @@ const getSpaces = async (req: Request, res: Response) => {
             },
           }
         );
-        const { id: spaceId, name: spaceName } = data.spaces[0];
-        return { spaceId, spaceName };
+        return data;
       } catch (error) {
         console.log(error);
       }
@@ -69,7 +68,7 @@ const getFolders = async (req: Request, res: Response) => {
   const { spaces } = req.body;
   const accessToken = req.get('Authorization');
 
-  const spacesId = spaces.map((space: { spaceId: string }) => space?.spaceId);
+  const spacesId = spaces.map((space: { id: string }) => space?.id);
 
   let folders: object[] = [];
 
@@ -84,6 +83,7 @@ const getFolders = async (req: Request, res: Response) => {
             },
           }
         );
+
         return data;
       } catch (error) {
         console.log(error);
@@ -91,7 +91,11 @@ const getFolders = async (req: Request, res: Response) => {
     })
   );
 
-  res.status(StatusCodes.OK).json(folders);
+  const filteredFolders = folders.filter(
+    (folder: any) => folder.folders.length > 0
+  );
+
+  res.status(StatusCodes.OK).json(filteredFolders);
 };
 
 const getLists = async (req: Request, res: Response) => {
@@ -100,6 +104,7 @@ const getLists = async (req: Request, res: Response) => {
 
   const foldersId = folders.map((folder: { id: string }) => folder.id);
 
+  console.log(folders);
   console.log(foldersId);
 
   let lists: object[] = [];
@@ -115,6 +120,7 @@ const getLists = async (req: Request, res: Response) => {
             },
           }
         );
+
         return data;
       } catch (error) {
         console.log(error);
